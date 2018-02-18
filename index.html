@@ -1,0 +1,92 @@
+<html>
+<body>
+<script type="text/javascript" src="pdf.js"></script>
+<script type="text/javascript">
+		
+		function convertDataURIToBinary(dataURI) {
+		  var BASE64_MARKER = ';base64,';
+
+		  var base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
+		  var base64 = dataURI.substring(base64Index); 
+		  var raw = window.atob(base64);
+		  var rawLength = raw.length;
+		  var array = new Uint8Array(new ArrayBuffer(rawLength));
+
+		  for(i = 0; i < rawLength; i++) {
+		    array[i] = raw.charCodeAt(i);
+		  }
+		  var tmp = new Uint8Array(array.byteLength + array.byteLength);
+		  tmp.set(array, 0);
+		  tmp.set(array, array.byteLength);
+		  return tmp;
+		}
+		function renderPDF(url, canvasContainer) {
+		     scale= 1.5;  //"zoom" factor for the PDF
+		       
+		    function renderPage(page) {
+		        var viewport = page.getViewport(scale);
+		        var canvas = document.createElement('canvas');
+		        var ctx = canvas.getContext('2d');
+		        var renderContext = {
+		          canvasContext: ctx,
+		          viewport: viewport
+		        };
+		       
+		        canvas.height = viewport.height;
+		        canvas.width = viewport.width;
+
+		        canvasContainer.appendChild(canvas);
+		       
+		        page.render(renderContext);
+		    }
+		  
+		    function renderPages(pdfDoc) {
+		        for(var num = 1; num <= pdfDoc.numPages; num++)
+		            pdfDoc.getPage(num).then(renderPage);
+		    }
+
+		    PDFJS.disableWorker = true;
+		    PDFJS.getDocument(url).then(renderPages);
+
+	}
+
+	function convertToBase64() {
+        //Read File
+        var selectedFile = document.getElementById("inputFile").files;
+        //Check File is not Empty
+        if (selectedFile.length > 0) {
+            // Select the very first file from list
+            var fileToLoad = selectedFile[0];
+            // FileReader function for read the file.
+            var fileReader = new FileReader();
+            var base64;
+            // Onload of file read the file content
+            fileReader.onload = function(fileLoadedEvent) {
+                base64 = fileLoadedEvent.target.result;
+                // Print data in console
+                // console.log(base64);				
+
+                renderPDF(convertDataURIToBinary(base64), document.getElementById('holder'));
+
+
+            };
+            // Convert data to base64
+            fileReader.readAsDataURL(fileToLoad)
+
+            
+
+        }
+    }
+
+
+</script>
+
+<input id="inputFile" type="file" onchange="convertToBase64();" />
+
+<div id="holder"></div>
+
+
+</body>
+</html>
+
+
